@@ -1,21 +1,29 @@
-# 🌌 AetherChat — Instagram AI Stealth Camouflage (Chrome Extension)
+# 🌌 AetherChat — Universal AI Stealth Camouflage (Chrome Extension)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-brightgreen.svg)](manifest.json)
 [![Playwright Tested](https://img.shields.io/badge/Tests-Playwright%20100%25%20Passed-success.svg)](test/verify_extension.py)
 
-A zero-build, ultra-fast Manifest V3 Chrome Extension that completely disguises your **Instagram Direct Web** interface (`instagram.com/direct/*`) as **Google Gemini**, **ChatGPT**, or **Claude**.
+A zero-build, ultra-fast Manifest V3 Chrome Extension that completely disguises your chats on **Instagram Direct**, **WhatsApp Web**, **Telegram Web**, **Discord**, **X / Twitter DMs**, **Messenger**, **Slack**, and any chat interface as **Google Gemini**, **ChatGPT**, or **Claude**.
 
-Chat with your friends in plain sight:
+Chat with your friends and colleagues in plain sight:
+- **Universal Multi-Platform Engine**: Seamlessly attaches to Instagram Direct, WhatsApp Web (`web.whatsapp.com`), Telegram Web (`web.telegram.org`), Discord (`discord.com`), X/Twitter DMs (`x.com`), Facebook Messenger, Slack, and any webpage with a chat composer.
+- **Full Multimedia Support (Images & Videos)**:
+  - **Incoming Media**: View photos and play videos sent by your friends directly inside the AI camouflage stream without ever leaving the disguise.
+  - **Lightbox Full-Res Zoom**: Click any image to open an interactive, high-resolution darkroom Lightbox Modal.
+  - **Outgoing Media**: Attach photos and videos via the `+` attachment button on the AI prompt capsule, drag-and-drop files directly, or paste from clipboard (`Cmd + V` / `Ctrl + V`).
 - **1:1 AI Interface Replicas**: Pixel-perfect recreations of Google Gemini (Flash High dark mode), ChatGPT (GPT-4o charcoal), and Claude (Sonnet 3.5 warm clay).
-- **Bi-Directional Messaging Bridge**: Typing into the AI prompt bar dispatches native browser events directly into Instagram's official composer. When your friend replies, their message streams into the AI conversation in real-time.
+- **Bi-Directional Messaging Bridge**: Typing into the AI prompt bar dispatches native browser events directly into the host platform's composer. When your friend replies, their message streams into the AI conversation in real-time.
 - **Real-Life 2026 AI Animations**: Authentic 3-dot orbital constellation thinking animation, morphing send/mic/stop button, and smooth typewriter token streaming.
 - **Sidebar Contact Obfuscation**: Real friend threads in the sidebar are masked as realistic technical AI research topics (*"PostgreSQL Connection Pool Sizing"*, *"Transformer Attention Matrix Optimization"*), with a stealth tooltip revealing the friend's handle on hover. Clicking any item switches seamlessly to that friend.
-- **Instant Panic Hotkey**: Double-tap `Esc` or press `Alt + Z` to instantly vanish the AI camouflage and restore normal Instagram Direct. Pressing again brings the disguise right back.
+- **Instant Panic Hotkey**: Double-tap `Esc` or press `Alt + Z` to instantly vanish the AI camouflage and restore the normal chat interface. Pressing again brings the disguise right back.
 
 ---
 
 ## 📸 Visual Previews
+
+### Rich Multimedia: Photos, Videos & Attachments in Gemini Theme
+![Multimedia in Gemini Theme](test/multimedia_screenshot.png)
 
 ### Real Friend Reply Intercepted as Gemini Response
 ![Real Reply in Gemini Theme](test/real_reply_screenshot.png)
@@ -34,11 +42,11 @@ Chat with your friends in plain sight:
 
 | Shortcut | Action | Description |
 |---|---|---|
-| `Alt + Z` | **Instant Panic Toggle** | Immediately toggles between AI Camouflage and standard Instagram Direct. |
-| `Double-Tap Esc` | **Panic Toggle** | Fast emergency key to restore normal Instagram Direct in under 50ms. |
+| `Alt + Z` | **Instant Panic Toggle** | Immediately toggles between AI Camouflage and standard native chat. |
+| `Double-Tap Esc` | **Panic Toggle** | Fast emergency key to restore normal chat UI in under 50ms. |
 | `N` | **Focus Prompt** | When idle, jumps focus straight into the prompt box so you can start typing. |
 | `Esc` | **Lift Focus** | Blurs/lifts focus off the prompt input so you can scroll or navigate freely. |
-| `Enter` | **Send Message** | Sends prompt to friend, starts 3-dot thinking state, and keeps input ready. |
+| `Enter` | **Send Message** | Sends prompt and media to friend, starts 3-dot thinking state, and keeps input ready. |
 
 ---
 
@@ -55,20 +63,20 @@ Chat with your friends in plain sight:
 3. Enable **Developer mode** (toggle in the top-right corner).
 4. Click **Load unpacked** (top-left button).
 5. Select the `instagram-ai-camouflage` folder.
-6. Navigate to `https://www.instagram.com/direct/inbox/` — your AI camouflage is active!
+6. Open any supported chat platform (Instagram Direct, WhatsApp Web, Telegram, Discord, X/Twitter, Messenger) — your AI camouflage is active!
 
 ---
 
-## 🧪 Testing Locally (No Instagram Login Required)
+## 🧪 Testing Locally (Offline Testbench)
 
-We provide an authentic offline Instagram Direct testbench:
+We provide an authentic offline chat testbench:
 1. Start a local server:
    ```bash
    cd instagram-ai-camouflage
    python3 -m http.server 8992
    ```
 2. Open `http://localhost:8992/test/instagram_mock.html` in Chrome.
-3. Test prompt dispatch, simulated friend incoming replies, theme switching, and panic toggle.
+3. Test prompt dispatch, incoming friend replies, image/video streaming, lightbox zoom, and panic toggle.
 4. Run the automated Playwright verification suite:
    ```bash
    python3 test/verify_extension.py
@@ -78,8 +86,8 @@ We provide an authentic offline Instagram Direct testbench:
 
 ## 🛡️ Privacy & Safety Architecture
 
-- **Zero API Risk**: Never interacts with Instagram's private GraphQL or REST API endpoints. Operates purely through standard browser DOM events.
-- **Shadow DOM Isolation**: The entire AI interface lives within an isolated `#insta-ai-camouflage-root` open Shadow DOM. Instagram's styles cannot leak into the AI interface, and extension styles cannot corrupt Instagram.
+- **Zero API Risk**: Never interacts with private GraphQL or REST API endpoints. Operates purely through standard browser DOM events and synthetic clipboard paste.
+- **Shadow DOM Isolation**: The entire AI interface lives within an isolated `#insta-ai-camouflage-root` open Shadow DOM. Host app styles cannot leak into the AI interface, and extension styles cannot corrupt the host app.
 - **Zero Build Dependencies**: Pure modern ES Modules and native CSS. No bundler or `node_modules` required to run or modify.
 
 ---
@@ -96,9 +104,11 @@ instagram-ai-camouflage/
 │   ├── obfuscator.js         # Deterministic friend-to-AI-topic mapping
 │   └── hotkeys.js            # Panic hotkey manager (Alt+Z / double Esc)
 ├── bridge/
-│   └── instagram_bridge.js   # Spatial-geometry DOM bridge & active polling engine
+│   ├── media_handler.js      # Universal media extractor, attachment manager & clipboard dispatcher
+│   ├── universal_bridge.js   # Multi-platform DOM bridge (Instagram, WhatsApp, Discord, X, Telegram)
+│   └── instagram_bridge.js   # Legacy compatibility alias
 ├── ui/
-│   └── overlay.js            # Shadow DOM UI renderer & typewriter animation engine
+│   └── overlay.js            # Shadow DOM UI renderer, media attachments & typewriter animation
 ├── themes/
 │   ├── common.css            # Common layout & typography
 │   ├── gemini.css            # Google Gemini 1:1 theme
@@ -109,12 +119,19 @@ instagram-ai-camouflage/
 │   ├── popup.css
 │   └── popup.js
 ├── test/
-│   ├── instagram_mock.html   # Standalone Instagram Direct testbench
+│   ├── instagram_mock.html   # Standalone chat testbench with media simulation
 │   ├── mock_direct.css
 │   ├── mock_direct.js
-│   └── verify_extension.py   # Automated Playwright test suite
+│   └── verify_extension.py   # Automated Playwright test suite (100% passing)
 ├── LICENSE                   # MIT License
 └── README.md
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
 ```
 
 ---

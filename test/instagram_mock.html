@@ -153,7 +153,8 @@
       <div class="sim-actions">
         <button class="sim-btn" id="sim-reply-text">💬 Friend: Send Question</button>
         <button class="sim-btn" id="sim-reply-code">💻 Friend: Send Code Snippet</button>
-        <button class="sim-btn" id="sim-reply-image">🖼️ Friend: Send Screenshot/Media</button>
+        <button class="sim-btn" id="sim-reply-image">🖼️ Friend: Send Image/Photo</button>
+        <button class="sim-btn" id="sim-reply-video">🎬 Friend: Send Video</button>
         <button class="sim-btn secondary" id="sim-add-thread">➕ Add Friend Thread</button>
       </div>
       <div class="sim-hint">
@@ -166,6 +167,8 @@
   <!-- Injected Extension Entrypoint for Standalone Testing -->
   <script src="../core/obfuscator.js"></script>
   <script src="../core/hotkeys.js"></script>
+  <script src="../bridge/media_handler.js"></script>
+  <script src="../bridge/universal_bridge.js"></script>
   <script src="../bridge/instagram_bridge.js"></script>
   <script src="../ui/overlay.js"></script>
   <script src="../content.js"></script>

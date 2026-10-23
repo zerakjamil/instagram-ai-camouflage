@@ -4,6 +4,7 @@ class AetherOverlay {
   constructor(options = {}) {
     this.bridge = options.bridge;
     this.hotkeys = options.hotkeys;
+    this.mediaHandler = (options.bridge && options.bridge.mediaHandler) || options.mediaHandler || (typeof MediaHandler !== "undefined" ? new MediaHandler() : null);
     this.theme = "gemini";
     this.activeThreadId = null;
     this.messages = [];
@@ -34,6 +35,7 @@ class AetherOverlay {
       document.body.appendChild(host);
     }
     this.host = host;
+    this.host.__aether_overlay__ = this;
 
     // Apply strict visibility and pointer-events to the light DOM host element
     if (this.isVisible) {
@@ -196,8 +198,11 @@ class AetherOverlay {
 
           <!-- Bottom Capsule Prompt Box -->
           <div class="input-wrapper-container">
+            <!-- Pending Attachments Strip (Images & Videos) -->
+            <div class="prompt-attachments-strip" id="prompt-attachments-strip"></div>
             <div class="gemini-input-capsule">
-              <span class="input-plus-icon">+</span>
+              <span class="input-plus-icon" id="prompt-plus-attach-btn" title="Attach Image or Video">+</span>
+              <input type="file" id="aether-media-file-input" accept="image/*,video/*" multiple hidden />
               <input 
                 type="text" 
                 class="gemini-prompt-input" 
@@ -239,6 +244,15 @@ class AetherOverlay {
             </div>
           </div>
         </main>
+
+        <!-- Media Lightbox / Zoom Modal -->
+        <div class="media-lightbox-backdrop" id="media-lightbox-modal">
+          <div class="lightbox-content">
+            <button class="lightbox-close-btn" id="lightbox-close-btn" title="Close">✕</button>
+            <img id="lightbox-img" src="" style="display:none;" />
+            <video id="lightbox-video" src="" controls style="display:none;"></video>
+          </div>
+        </div>
 
         <!-- Settings / Panic Modal -->
         <div class="aether-modal-backdrop" id="settings-modal-backdrop">
@@ -325,20 +339,117 @@ class AetherOverlay {
       this.updateActionButtonsState();
     });
 
+    // File Input & Media Attachment Handling
+    const plusBtn = this.shadowRoot.getElementById("prompt-plus-attach-btn");
+    const fileInput = this.shadowRoot.getElementById("aether-media-file-input");
+    const inputCapsule = this.shadowRoot.querySelector(".gemini-input-capsule");
+
+    if (plusBtn && fileInput) {
+      plusBtn.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", async () => {
+        if (fileInput.files && fileInput.files.length > 0 && this.mediaHandler) {
+          for (const file of fileInput.files) {
+            await this.mediaHandler.addAttachment(file);
+          }
+          this.renderAttachmentChips();
+          fileInput.value = "";
+        }
+      });
+    }
+
+    // Clipboard Paste for Images/Videos
+    input.addEventListener("paste", async (e) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0 && this.mediaHandler) {
+        for (const file of e.clipboardData.files) {
+          if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
+            await this.mediaHandler.addAttachment(file);
+          }
+        }
+        this.renderAttachmentChips();
+      }
+    });
+
+    // Drag & Drop media into the prompt capsule
+    if (inputCapsule) {
+      inputCapsule.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        inputCapsule.classList.add("drag-over");
+      });
+      inputCapsule.addEventListener("dragleave", () => {
+        inputCapsule.classList.remove("drag-over");
+      });
+      inputCapsule.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        inputCapsule.classList.remove("drag-over");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0 && this.mediaHandler) {
+          for (const file of e.dataTransfer.files) {
+            await this.mediaHandler.addAttachment(file);
+          }
+          this.renderAttachmentChips();
+        }
+      });
+    }
+
+    // Media Lightbox Zoom Modal handlers
+    const lightboxModal = this.shadowRoot.getElementById("media-lightbox-modal");
+    const lightboxImg = this.shadowRoot.getElementById("lightbox-img");
+    const lightboxVideo = this.shadowRoot.getElementById("lightbox-video");
+    const lightboxClose = this.shadowRoot.getElementById("lightbox-close-btn");
+
+    const closeLightbox = () => {
+      lightboxModal.classList.remove("open");
+      lightboxImg.style.display = "none";
+      lightboxImg.src = "";
+      lightboxVideo.style.display = "none";
+      lightboxVideo.src = "";
+    };
+
+    if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
+    if (lightboxModal) {
+      lightboxModal.addEventListener("click", (e) => {
+        if (e.target === lightboxModal) closeLightbox();
+      });
+    }
+
+    // Stream click delegation for image/video lightbox zoom
+    const stream = this.shadowRoot.getElementById("chat-stream-container");
+    if (stream) {
+      stream.addEventListener("click", (e) => {
+        const img = e.target.closest(".zoomable-media-img");
+        if (img && img.src) {
+          lightboxImg.src = img.src;
+          lightboxImg.style.display = "block";
+          lightboxVideo.style.display = "none";
+          lightboxModal.classList.add("open");
+        }
+      });
+    }
+
     // 1. Submit Prompt on Enter or Send Button Click
     const handleSend = () => {
       const text = input.value.trim();
-      if (!text) return;
+      const attachments = this.mediaHandler ? this.mediaHandler.getAttachments() : [];
+      if (!text && attachments.length === 0) return;
 
-      this.addMessageTurn("user", text);
+      const files = attachments.map(a => a.file);
+      const mediaPreviews = attachments.map(a => ({ type: a.type, url: a.previewUrl, alt: a.name }));
+
+      this.addMessageTurn("user", text, true, mediaPreviews);
       input.value = "";
+      if (this.mediaHandler) {
+        this.mediaHandler.clearAttachments();
+      }
+      this.renderAttachmentChips();
       this.updateActionButtonsState();
 
       // Trigger Thinking Animation (3-Dot Orbital Cluster)
       this.showThinkingAnimation();
 
       if (this.bridge) {
-        this.bridge.sendOutgoingMessage(text);
+        this.bridge.sendOutgoingMessage(text, files);
       }
 
       // Keep prompt input focused so the user doesn't lose focus after sending
@@ -442,6 +553,39 @@ class AetherOverlay {
     });
   }
 
+  // Render Attachment Chips (Images & Videos) above prompt input
+  renderAttachmentChips() {
+    const strip = this.shadowRoot.getElementById("prompt-attachments-strip");
+    if (!strip || !this.mediaHandler) return;
+    strip.innerHTML = "";
+
+    const attachments = this.mediaHandler.getAttachments();
+    attachments.forEach((att, idx) => {
+      const chip = document.createElement("div");
+      chip.className = "attachment-chip";
+      chip.innerHTML = `
+        ${att.type === "video" ? `
+          <div class="attachment-thumb" style="display:flex;align-items:center;justify-content:center;background:#1e1f20;font-size:16px;">🎬</div>
+        ` : `
+          <img src="${att.previewUrl}" class="attachment-thumb" alt="${this.escapeHtml(att.name)}" />
+        `}
+        <span class="attachment-chip-name" title="${this.escapeHtml(att.name)}">${this.escapeHtml(att.name)}</span>
+        <span class="attachment-chip-remove" data-index="${idx}" title="Remove file">✕</span>
+      `;
+
+      chip.querySelector(".attachment-chip-remove").addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.mediaHandler.removeAttachment(idx);
+        this.renderAttachmentChips();
+        this.updateActionButtonsState();
+      });
+
+      strip.appendChild(chip);
+    });
+
+    this.updateActionButtonsState();
+  }
+
   // Update Morphing Action Button State (Mic ↔ Send ↔ Stop)
   updateActionButtonsState() {
     const input = this.shadowRoot.getElementById("aether-prompt-input");
@@ -457,7 +601,10 @@ class AetherOverlay {
     }
 
     stopBtn.classList.remove("active");
-    if (input && input.value.trim().length > 0) {
+    const hasAttachments = this.mediaHandler ? this.mediaHandler.getAttachments().length > 0 : false;
+    const hasText = input && input.value.trim().length > 0;
+
+    if (hasText || hasAttachments) {
       micBtn.classList.remove("active");
       sendBtn.classList.add("active");
     } else {
@@ -632,7 +779,7 @@ class AetherOverlay {
     });
   }
 
-  // Load Existing Historical Messages from Instagram
+  // Load Existing Historical Messages from Instagram / Social Media
   renderExistingMessages(history) {
     if (!history || history.length === 0) return;
     this.clearChatStream();
@@ -642,29 +789,30 @@ class AetherOverlay {
     }
 
     history.forEach((msg) => {
-      this.addMessageTurn(msg.role, msg.text, false); // false = no streaming delay
+      this.addMessageTurn(msg.role, msg.text, false, msg.media); // false = no streaming delay
     });
   }
 
-  // Add Message Turn (User or Assistant Friend) with Modern Typewriter Streaming
-  addMessageTurn(role, text, animateStream = true) {
-    if (!text || typeof text !== "string") return;
-    const cleanText = text.trim();
-    if (!cleanText) return;
+  // Add Message Turn (User or Assistant Friend) with Multimedia & Streaming
+  addMessageTurn(role, text = "", animateStream = true, media = []) {
+    const cleanText = (typeof text === "string" ? text : "").trim();
+    const mediaList = Array.isArray(media) ? media : [];
+    if (!cleanText && mediaList.length === 0) return;
 
-    // Prevent immediate consecutive duplicate messages (prevents "choi" showing twice)
+    // Prevent immediate consecutive duplicate messages (prevents same message showing twice)
     const now = Date.now();
+    const mediaKey = mediaList.map(m => m.url || m.previewUrl || "").join(",");
+    const turnKey = `${role}:${cleanText}:${mediaKey}`;
     if (
       this.lastTurn &&
-      this.lastTurn.role === role &&
-      this.lastTurn.text === cleanText &&
+      this.lastTurn.turnKey === turnKey &&
       now - this.lastTurn.time < 5000
     ) {
       console.log("[AetherChat Overlay] Prevented duplicate turn:", role, cleanText);
       return;
     }
-    this.lastTurn = { role, text: cleanText, time: now };
-    this.messages.push({ role, text: cleanText, timestamp: now });
+    this.lastTurn = { role, text: cleanText, turnKey, time: now };
+    this.messages.push({ role, text: cleanText, media: mediaList, timestamp: now });
 
     this.hideThinkingAnimation();
 
@@ -678,16 +826,66 @@ class AetherOverlay {
     turn.className = `message-turn ${role}`;
 
     if (role === "user") {
+      let mediaHtml = "";
+      if (mediaList.length > 0) {
+        mediaHtml = `
+          <div class="message-media-container user-media">
+            ${mediaList.map(m => {
+              if (m.type === "video") {
+                return `
+                  <div class="media-video-wrap">
+                    <video src="${m.url || m.previewUrl}" controls playsinline></video>
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="media-image-wrap">
+                    <img src="${m.url || m.previewUrl}" class="zoomable-media-img" alt="${this.escapeHtml(m.alt || 'Attached image')}" />
+                  </div>
+                `;
+              }
+            }).join("")}
+          </div>
+        `;
+      }
+
       turn.innerHTML = `
-        <div class="prompt-bubble">${this.escapeHtml(cleanText)}</div>
+        <div class="prompt-bubble">
+          ${mediaHtml}
+          ${cleanText ? `<div class="prompt-text">${this.escapeHtml(cleanText)}</div>` : ''}
+        </div>
       `;
       stream.appendChild(turn);
       stream.scrollTop = stream.scrollHeight;
     } else {
-      // Modern Gemini assistant response (Image 5)
+      // Modern Gemini assistant response (Image 5) with Media support
+      let mediaHtml = "";
+      if (mediaList.length > 0) {
+        mediaHtml = `
+          <div class="message-media-container assistant-media">
+            ${mediaList.map(m => {
+              if (m.type === "video") {
+                return `
+                  <div class="media-video-wrap">
+                    <video src="${m.url}" poster="${m.poster || ''}" controls playsinline></video>
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="media-image-wrap">
+                    <img src="${m.url}" class="zoomable-media-img" alt="${this.escapeHtml(m.alt || 'Attached media')}" loading="lazy" />
+                  </div>
+                `;
+              }
+            }).join("")}
+          </div>
+        `;
+      }
+
       turn.innerHTML = `
         <div class="assistant-content-wrapper">
-          <div class="response-content" id="response-content-target"></div>
+          ${mediaHtml}
+          ${cleanText ? `<div class="response-content" id="response-content-target"></div>` : ''}
           <div class="gemini-response-actions">
             <button class="action-icon-btn" title="Good response">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
@@ -716,23 +914,29 @@ class AetherOverlay {
       const copyBtn = turn.querySelector(".copy-btn");
 
       // Bind copy button
-      copyBtn.addEventListener("click", () => {
-        navigator.clipboard.writeText(cleanText);
-        const icon = copyBtn.querySelector(".copy-icon");
-        const check = copyBtn.querySelector(".copy-check");
-        icon.style.display = "none";
-        check.style.display = "inline";
-        setTimeout(() => {
-          icon.style.display = "inline";
-          check.style.display = "none";
-        }, 1500);
-      });
+      if (copyBtn) {
+        copyBtn.addEventListener("click", () => {
+          navigator.clipboard.writeText(cleanText);
+          const icon = copyBtn.querySelector(".copy-icon");
+          const check = copyBtn.querySelector(".copy-check");
+          if (icon && check) {
+            icon.style.display = "none";
+            check.style.display = "inline";
+            setTimeout(() => {
+              icon.style.display = "inline";
+              check.style.display = "none";
+            }, 1500);
+          }
+        });
+      }
 
       // Typewriter Streaming Animation
-      if (animateStream && cleanText.length > 0) {
-        this.streamTextIntoElement(target, cleanText);
-      } else {
-        target.innerHTML = this.formatAsMarkdown(cleanText);
+      if (target && cleanText.length > 0) {
+        if (animateStream) {
+          this.streamTextIntoElement(target, cleanText);
+        } else {
+          target.innerHTML = this.formatAsMarkdown(cleanText);
+        }
       }
     }
   }
@@ -1424,6 +1628,181 @@ class AetherOverlay {
       .modal-btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; }
       .modal-btn.primary { background: #8ab4f8; color: #131314; }
       .modal-btn.secondary { background: #2d2f31; color: #e3e3e3; }
+
+      /* Pending Attachments Strip (Images & Videos) */
+      .prompt-attachments-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+        padding: 0 4px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+      .attachment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1e1f20;
+        border: 1px solid #3c4043;
+        border-radius: 12px;
+        padding: 4px 10px 4px 6px;
+        max-width: 220px;
+        animation: chipFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes chipFadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .attachment-thumb {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+      .attachment-chip-name {
+        font-size: 12px;
+        color: #e3e3e3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 130px;
+      }
+      .attachment-chip-remove {
+        cursor: pointer;
+        color: #9aa0a6;
+        font-size: 13px;
+        padding: 2px 4px;
+        border-radius: 50%;
+        line-height: 1;
+        transition: color 0.15s, background 0.15s;
+      }
+      .attachment-chip-remove:hover {
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.15);
+      }
+      .gemini-input-capsule.drag-over {
+        border-color: #8ab4f8 !important;
+        background: rgba(138, 180, 248, 0.08) !important;
+      }
+
+      /* Message Media Containers */
+      .message-media-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .message-media-container.user-media {
+        justify-content: flex-end;
+      }
+      .media-image-wrap {
+        position: relative;
+        max-width: 380px;
+        max-height: 320px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        cursor: zoom-in;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+      }
+      .media-image-wrap:hover {
+        transform: scale(1.015);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      }
+      .media-image-wrap img, .zoomable-media-img {
+        display: block;
+        max-width: 100%;
+        max-height: 320px;
+        object-fit: cover;
+      }
+      .media-video-wrap {
+        position: relative;
+        max-width: 440px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #000;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      }
+      .media-video-wrap video {
+        display: block;
+        max-width: 100%;
+        max-height: 360px;
+        border-radius: 14px;
+        outline: none;
+      }
+
+      /* Media Lightbox Zoom Modal */
+      .media-lightbox-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.88);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .media-lightbox-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .lightbox-content {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .lightbox-content img {
+        max-width: 90vw;
+        max-height: 85vh;
+        border-radius: 12px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+        object-fit: contain;
+        animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .lightbox-content video {
+        max-width: 90vw;
+        max-height: 85vh;
+        border-radius: 12px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+        outline: none;
+        animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes lightboxZoomIn {
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .lightbox-close-btn {
+        position: absolute;
+        top: -46px;
+        right: 0;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      .lightbox-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
     `;
   }
 

@@ -97,12 +97,32 @@ ip route flush cache</pre>`;
   });
 
   document.getElementById("sim-reply-image").addEventListener("click", () => {
-    const imgHtml = `Check out this server screenshot:
-<div style="margin-top:6px;padding:12px;background:#18181b;border-radius:8px;border:1px dashed #555;text-align:center;">
-  [📷 Attached Screenshot: system_metrics_2026.png]
-</div>`;
+    const svgData = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="600" height="340" viewBox="0 0 600 340">
+        <rect width="100%" height="100%" fill="#1e1f20"/>
+        <circle cx="300" cy="130" r="44" fill="#8ab4f8" opacity="0.25"/>
+        <polygon points="300,105 325,145 275,145" fill="#8ab4f8"/>
+        <text x="50%" y="215" fill="#e3e3e3" font-size="18" font-family="-apple-system,sans-serif" text-anchor="middle">Server Architecture Diagram • 2026</text>
+        <text x="50%" y="245" fill="#9aa0a6" font-size="13" font-family="-apple-system,sans-serif" text-anchor="middle">Full-fidelity inspection &amp; zoom test</text>
+      </svg>
+    `);
+    const imgHtml = `Here is the system architecture diagram we drafted:
+      <div style="margin-top:8px;">
+        <img src="${svgData}" alt="System Architecture Diagram" style="max-width:100%; border-radius:12px; display:block;" />
+      </div>`;
     simulateIncomingMessage(imgHtml);
   });
+
+  const simReplyVideo = document.getElementById("sim-reply-video");
+  if (simReplyVideo) {
+    simReplyVideo.addEventListener("click", () => {
+      const vidHtml = `Here is the screen capture of the cluster deployment:
+        <div style="margin-top:8px;">
+          <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" controls style="max-width:100%; border-radius:12px; display:block;"></video>
+        </div>`;
+      simulateIncomingMessage(vidHtml);
+    });
+  }
 
   document.getElementById("sim-add-thread").addEventListener("click", () => {
     const names = ["elena_ai", "david_cloud", "maya_security", "jordan_frontend"];

@@ -25,13 +25,17 @@
   });
   hotkeys.init();
 
-  // 3. Initialize Instagram Bridge
-  const bridge = new InstagramBridge({
+  // 3. Initialize Media Handler & Universal Multi-Platform Chat Bridge
+  const mediaHandler = typeof MediaHandler !== "undefined" ? new MediaHandler() : null;
+
+  const BridgeClass = typeof UniversalChatBridge !== "undefined" ? UniversalChatBridge : InstagramBridge;
+  const bridge = new BridgeClass({
     obfuscator,
+    mediaHandler,
     onIncomingMessage: (msg) => {
       console.log("[AetherChat] Incoming friend message received:", msg);
       if (overlayInstance) {
-        overlayInstance.addMessageTurn("assistant", msg.text);
+        overlayInstance.addMessageTurn("assistant", msg.text, true, msg.media);
       }
     },
     onThreadsUpdated: (threads) => {
@@ -56,6 +60,7 @@
   // 4. Initialize Overlay
   overlayInstance = new AetherOverlay({
     bridge,
+    mediaHandler,
     hotkeys
   });
   await overlayInstance.init();

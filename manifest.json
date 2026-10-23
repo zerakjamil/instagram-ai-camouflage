@@ -1,13 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "AetherChat - Instagram AI Stealth Camouflage",
-  "version": "1.0.0",
-  "description": "Transforms Instagram Direct into a 1:1 replica of Gemini, ChatGPT, or Claude with real-time stealth message bridging.",
+  "name": "AetherChat - Universal AI Stealth Camouflage",
+  "version": "1.1.0",
+  "description": "Transforms Instagram, WhatsApp Web, Telegram, Discord, X/Twitter, Messenger, Slack and any chat interface into a 1:1 replica of Gemini, ChatGPT, or Claude with real-time stealth multimedia bridging.",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "https://www.instagram.com/*",
+    "https://*.instagram.com/*",
+    "https://web.whatsapp.com/*",
+    "https://web.telegram.org/*",
+    "https://discord.com/*",
+    "https://twitter.com/*",
+    "https://x.com/*",
+    "https://www.messenger.com/*",
+    "https://*.facebook.com/messages/*",
+    "https://app.slack.com/*",
+    "https://*.reddit.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],
@@ -17,14 +26,24 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.instagram.com/direct/*",
-        "https://www.instagram.com/*",
+        "https://*.instagram.com/*",
+        "https://web.whatsapp.com/*",
+        "https://web.telegram.org/*",
+        "https://discord.com/*",
+        "https://twitter.com/*",
+        "https://x.com/*",
+        "https://www.messenger.com/*",
+        "https://*.facebook.com/messages/*",
+        "https://app.slack.com/*",
+        "https://*.reddit.com/*",
         "http://localhost:*/*",
         "http://127.0.0.1:*/*"
       ],
       "js": [
         "core/obfuscator.js",
         "core/hotkeys.js",
+        "bridge/media_handler.js",
+        "bridge/universal_bridge.js",
         "bridge/instagram_bridge.js",
         "ui/overlay.js",
         "content.js"

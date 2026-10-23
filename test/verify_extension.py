@@ -206,6 +206,165 @@ async def run_verification():
             await page.screenshot(path=real_reply_screenshot, full_page=True)
             print(f"✓ Real reply screenshot captured: {real_reply_screenshot}")
 
+            # 5c. Test Incoming Friend Image Detection & Rendering in Gemini
+            print("[*] Testing incoming friend image simulation...")
+            await page.evaluate("() => document.getElementById('sim-reply-image').click()")
+            await asyncio.sleep(0.6)
+
+            image_check = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const lastTurn = host.shadowRoot.querySelector('.message-turn.assistant:last-child');
+                    const img = lastTurn ? lastTurn.querySelector('.zoomable-media-img') : null;
+                    const responseText = lastTurn ? lastTurn.querySelector('.response-content') : null;
+                    return {
+                        hasImage: !!img,
+                        imgSrc: img ? img.src.substring(0, 40) : null,
+                        text: responseText ? responseText.textContent.trim() : null
+                    };
+                }
+            """)
+            print(f"✓ Friend Image rendered in Gemini stream: {image_check}")
+            assert image_check["hasImage"], "Incoming friend image did not render in AI camouflage stream!"
+            assert "System Architecture Diagram" in image_check["text"] or "system architecture" in image_check["text"].lower()
+
+            # 5d. Test Lightbox Zoom Modal
+            print("[*] Testing Lightbox Zoom Modal for image inspection...")
+            await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const img = host.shadowRoot.querySelector('.message-turn.assistant:last-child .zoomable-media-img');
+                    if (img) img.click();
+                }
+            """)
+            await asyncio.sleep(0.2)
+
+            lightbox_open = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const modal = host.shadowRoot.getElementById('media-lightbox-modal');
+                    const img = host.shadowRoot.getElementById('lightbox-img');
+                    return {
+                        isOpen: modal ? modal.classList.contains('open') : false,
+                        hasSrc: img ? !!img.src : false
+                    };
+                }
+            """)
+            print(f"✓ Lightbox Zoom Modal opened: {lightbox_open}")
+            assert lightbox_open["isOpen"] and lightbox_open["hasSrc"], "Lightbox zoom modal failed to open!"
+
+            # Close Lightbox Modal
+            await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const closeBtn = host.shadowRoot.getElementById('lightbox-close-btn');
+                    if (closeBtn) closeBtn.click();
+                }
+            """)
+            await asyncio.sleep(0.15)
+            lightbox_closed = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const modal = host.shadowRoot.getElementById('media-lightbox-modal');
+                    return modal ? modal.classList.contains('open') : true;
+                }
+            """)
+            assert not lightbox_closed, "Lightbox zoom modal failed to close!"
+            print("✓ Lightbox Zoom Modal closed successfully")
+
+            # 5e. Test Incoming Friend Video Stream
+            print("[*] Testing incoming friend video stream simulation...")
+            await page.evaluate("() => document.getElementById('sim-reply-video').click()")
+            await asyncio.sleep(0.6)
+
+            video_check = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const lastTurn = host.shadowRoot.querySelector('.message-turn.assistant:last-child');
+                    const video = lastTurn ? lastTurn.querySelector('video') : null;
+                    return {
+                        hasVideo: !!video,
+                        videoSrc: video ? video.src : null
+                    };
+                }
+            """)
+            print(f"✓ Friend Video rendered in Gemini stream: {video_check}")
+            assert video_check["hasVideo"], "Incoming friend video did not render in AI camouflage stream!"
+            assert "ForBiggerBlazes.mp4" in video_check["videoSrc"]
+
+            # 5f. Test Outgoing Multimedia Attachment & Prompt Dispatch
+            print("[*] Testing outgoing image/attachment strip in AI prompt capsule...")
+            await page.evaluate("""
+                async () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const overlay = host.__aether_overlay__;
+                    if (overlay && overlay.mediaHandler) {
+                        const blob = new Blob(["mock image data"], { type: "image/png" });
+                        const file = new File([blob], "server_cluster_spec.png", { type: "image/png" });
+                        await overlay.mediaHandler.addAttachment(file);
+                        overlay.renderAttachmentChips();
+                    }
+                }
+            """)
+            await asyncio.sleep(0.2)
+
+            attachment_chips = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const chips = host.shadowRoot.querySelectorAll('.attachment-chip');
+                    const sendBtn = host.shadowRoot.getElementById('action-send-btn');
+                    const sendBtnActive = sendBtn ? sendBtn.classList.contains('active') : false;
+                    return {
+                        chipCount: chips.length,
+                        chipName: chips.length > 0 ? chips[0].querySelector('.attachment-chip-name').textContent.trim() : null,
+                        sendBtnActive: sendBtnActive
+                    };
+                }
+            """)
+            print(f"✓ Outgoing attachment chip in prompt box: {attachment_chips}")
+            assert attachment_chips["chipCount"] == 1, "Attachment chip did not render above prompt input!"
+            assert attachment_chips["chipName"] == "server_cluster_spec.png"
+            assert attachment_chips["sendBtnActive"], "Send button should activate when an attachment is added!"
+
+            # Now send message with attachment
+            await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const input = host.shadowRoot.getElementById('aether-prompt-input');
+                    input.value = "Review this spec diagram";
+                    // Click send button
+                    const sendBtn = host.shadowRoot.getElementById('action-send-btn');
+                    if (sendBtn) sendBtn.click();
+                }
+            """)
+            await asyncio.sleep(0.3)
+
+            user_turn_with_media = await page.evaluate("""
+                () => {
+                    const host = document.getElementById('insta-ai-camouflage-root');
+                    const userTurns = host.shadowRoot.querySelectorAll('.message-turn.user');
+                    const lastUserTurn = userTurns.length > 0 ? userTurns[userTurns.length - 1] : null;
+                    const img = lastUserTurn ? lastUserTurn.querySelector('img') : null;
+                    const text = lastUserTurn ? lastUserTurn.querySelector('.prompt-text') : null;
+                    const chipsRemaining = host.shadowRoot.querySelectorAll('.attachment-chip').length;
+                    return {
+                        hasImg: !!img,
+                        imgSrc: img ? img.src.substring(0, 30) : null,
+                        text: text ? text.textContent.trim() : null,
+                        chipsRemaining: chipsRemaining
+                    };
+                }
+            """)
+            print(f"✓ Outgoing prompt turn with media rendered: {user_turn_with_media}")
+            assert user_turn_with_media["hasImg"], "User turn should contain attached media preview!"
+            assert user_turn_with_media["text"] == "Review this spec diagram"
+            assert user_turn_with_media["chipsRemaining"] == 0, "Attachment strip should clear after sending!"
+
+            # Capture full multimedia screenshot
+            multimedia_screenshot = os.path.join(EXTENSION_DIR, "test", "multimedia_screenshot.png")
+            await page.screenshot(path=multimedia_screenshot, full_page=True)
+            print(f"✓ Multimedia screenshot captured: {multimedia_screenshot}")
+
             # 6. Test Panic Hotkey (Alt+Z) & Instagram Native Clickability When Off
             print("[*] Testing Alt+Z Panic Toggle...")
             await page.keyboard.press("Alt+z")
