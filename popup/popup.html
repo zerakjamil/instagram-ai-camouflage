@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherChat Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo-wrap">
+        <svg class="sparkle-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C12 7.52 7.52 12 2 12C7.52 12 12 16.48 12 22C12 16.48 16.48 12 22 12C16.48 12 12 7.52 12 2Z" fill="url(#popup_sparkle)"/>
+          <defs>
+            <linearGradient id="popup_sparkle" x1="2" y1="2" x2="22" y2="22">
+              <stop stop-color="#4285F4"/>
+              <stop offset="0.5" stop-color="#9B72CB"/>
+              <stop offset="1" stop-color="#D96570"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1>AetherChat</h1>
+      </div>
+      <span class="badge-stealth">STEALTH</span>
+    </header>
+
+    <div class="card toggle-card">
+      <div class="toggle-info">
+        <span class="toggle-title">AI Camouflage</span>
+        <span class="toggle-desc">Disguise Instagram Direct as AI</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="camouflage-toggle" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+
+    <div class="card section-card">
+      <label class="section-label">AI Interface Persona</label>
+      <div class="theme-options">
+        <label class="theme-radio">
+          <input type="radio" name="ai-theme" value="gemini" checked>
+          <div class="theme-box">
+            <span class="theme-icon">✨</span>
+            <div class="theme-text">
+              <strong>Google Gemini</strong>
+              <small>Flash High • Midnight</small>
+            </div>
+          </div>
+        </label>
+
+        <label class="theme-radio">
+          <input type="radio" name="ai-theme" value="chatgpt">
+          <div class="theme-box">
+            <span class="theme-icon">🤖</span>
+            <div class="theme-text">
+              <strong>ChatGPT</strong>
+              <small>GPT-4o • Charcoal</small>
+            </div>
+          </div>
+        </label>
+
+        <label class="theme-radio">
+          <input type="radio" name="ai-theme" value="claude">
+          <div class="theme-box">
+            <span class="theme-icon">⭐</span>
+            <div class="theme-text">
+              <strong>Claude</strong>
+              <small>3.5 Sonnet • Warm Clay</small>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="card hotkey-card">
+      <span class="hotkey-title">⚡ Instant Panic Triggers</span>
+      <div class="hotkey-list">
+        <div class="hotkey-item">
+          <span>Toggle Camouflage</span>
+          <kbd>Alt + Z</kbd>
+        </div>
+        <div class="hotkey-item">
+          <span>Panic Revert</span>
+          <kbd>Esc Esc</kbd>
+        </div>
+      </div>
+    </div>
+
+    <footer class="popup-footer">
+      <button class="footer-btn" id="open-testbench-btn">Open Testbench Mock</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

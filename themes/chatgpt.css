@@ -1,0 +1,117 @@
+/* ChatGPT (GPT-4o) Theme Styles */
+#aether-app[data-theme="chatgpt"] {
+  background-color: #212121;
+  color: #ececec;
+  --gpt-sidebar-bg: #171717;
+  --gpt-hover-bg: #2f2f2f;
+  --gpt-input-bg: #2f2f2f;
+  --gpt-border: #424242;
+  --gpt-accent: #10a37f;
+}
+
+#aether-app[data-theme="chatgpt"] .aether-sidebar {
+  width: 260px;
+  background-color: var(--gpt-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#aether-app[data-theme="chatgpt"] .sidebar-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#aether-app[data-theme="chatgpt"] .brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#aether-app[data-theme="chatgpt"] .brand-sparkle {
+  display: none;
+}
+
+#aether-app[data-theme="chatgpt"] .brand-name::before {
+  content: "ChatGPT";
+  font-weight: 600;
+  font-size: 17px;
+  color: #ececec;
+}
+
+#aether-app[data-theme="chatgpt"] .new-chat-btn {
+  background: transparent;
+  color: #ececec;
+  border: 1px solid var(--gpt-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+#aether-app[data-theme="chatgpt"] .new-chat-btn:hover {
+  background: var(--gpt-hover-bg);
+}
+
+#aether-app[data-theme="chatgpt"] .static-nav-list,
+#aether-app[data-theme="chatgpt"] .sidebar-section-title,
+#aether-app[data-theme="chatgpt"] .notebook-item {
+  display: none;
+}
+
+#aether-app[data-theme="chatgpt"] .chat-session-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #b4b4b4;
+  font-size: 13.5px;
+}
+
+#aether-app[data-theme="chatgpt"] .chat-session-item:hover {
+  background: var(--gpt-hover-bg);
+  color: #ececec;
+}
+
+#aether-app[data-theme="chatgpt"] .chat-session-item.active {
+  background: var(--gpt-hover-bg);
+  color: #ffffff;
+}
+
+#aether-app[data-theme="chatgpt"] .aether-main {
+  background: #212121;
+}
+
+#aether-app[data-theme="chatgpt"] .empty-greeting-title {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+#aether-app[data-theme="chatgpt"] .empty-greeting-title::before {
+  content: "What can I help with today?";
+}
+
+#aether-app[data-theme="chatgpt"] .gemini-input-capsule {
+  background: var(--gpt-input-bg);
+  border-radius: 24px;
+  border: 1px solid var(--gpt-border);
+  padding: 14px 18px;
+}
+
+#aether-app[data-theme="chatgpt"] .bottom-pills-row {
+  display: none;
+}
+
+#aether-app[data-theme="chatgpt"] .message-turn.user .prompt-bubble {
+  background: #2f2f2f;
+  border-radius: 18px;
+  max-width: 70%;
+  color: #ffffff;
+}
+
+#aether-app[data-theme="chatgpt"] .message-turn.assistant {
+  padding-left: 0;
+}

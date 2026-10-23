@@ -1,0 +1,174 @@
+/* AetherChat Common Layout & Theme Variables */
+:host {
+  all: initial;
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647; /* Top layer over Instagram */
+  font-family: -apple-system, BlinkMacSystemFont, "Google Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: dark;
+}
+
+:host([data-hidden="true"]),
+:host(.panic-hidden) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+#aether-app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
+}
+
+#aether-app.panic-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Reset inside Shadow DOM */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+input, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Tooltip for Stealth Friend Handle Reveal */
+.stealth-tooltip-wrap {
+  position: relative;
+}
+
+.stealth-tooltip {
+  position: absolute;
+  left: 105%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  z-index: 1000;
+}
+
+.stealth-tooltip-wrap:hover .stealth-tooltip {
+  opacity: 1;
+}
+
+/* Settings Modal */
+.aether-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.aether-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.aether-modal {
+  width: 440px;
+  background: #1e1f20;
+  border: 1px solid #3c4043;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #e3e3e3;
+}
+
+.aether-modal h3 {
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-field label {
+  font-size: 12px;
+  color: #9aa0a6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-field select, .modal-field input {
+  background: #131314;
+  border: 1px solid #3c4043;
+  color: #e3e3e3;
+  padding: 8px 12px;
+  border-radius: 8px;
+  outline: none;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.modal-btn.primary {
+  background: #8ab4f8;
+  color: #131314;
+}
+
+.modal-btn.secondary {
+  background: #2d2f31;
+  color: #e3e3e3;
+}

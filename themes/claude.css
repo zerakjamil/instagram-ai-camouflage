@@ -1,0 +1,96 @@
+/* Claude 3.5 Sonnet Theme Styles */
+#aether-app[data-theme="claude"] {
+  background-color: #262624;
+  color: #e5e5e4;
+  --claude-sidebar-bg: #1f1e1d;
+  --claude-hover-bg: #2d2c2a;
+  --claude-input-bg: #1f1e1d;
+  --claude-border: #383734;
+  --claude-accent: #d97706;
+  font-family: -apple-system, BlinkMacSystemFont, "Canela", "Georgia", serif, sans-serif;
+}
+
+#aether-app[data-theme="claude"] .aether-sidebar {
+  width: 270px;
+  background-color: var(--claude-sidebar-bg);
+  border-right: 1px solid var(--claude-border);
+}
+
+#aether-app[data-theme="claude"] .brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#aether-app[data-theme="claude"] .brand-sparkle {
+  display: none;
+}
+
+#aether-app[data-theme="claude"] .brand-name::before {
+  content: "Claude";
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #e5e5e4;
+}
+
+#aether-app[data-theme="claude"] .new-chat-btn {
+  background: #cc785c;
+  color: #1f1e1d;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+}
+
+#aether-app[data-theme="claude"] .static-nav-list,
+#aether-app[data-theme="claude"] .sidebar-section-title,
+#aether-app[data-theme="claude"] .notebook-item {
+  display: none;
+}
+
+#aether-app[data-theme="claude"] .chat-session-item {
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: #bbb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#aether-app[data-theme="claude"] .chat-session-item:hover {
+  background: var(--claude-hover-bg);
+  color: #fff;
+}
+
+#aether-app[data-theme="claude"] .chat-session-item.active {
+  background: var(--claude-hover-bg);
+  color: #fff;
+}
+
+#aether-app[data-theme="claude"] .aether-main {
+  background: #262624;
+}
+
+#aether-app[data-theme="claude"] .empty-greeting-title {
+  font-family: Georgia, serif;
+  font-size: 34px;
+}
+
+#aether-app[data-theme="claude"] .empty-greeting-title::before {
+  content: "Good afternoon, Human";
+}
+
+#aether-app[data-theme="claude"] .gemini-input-capsule {
+  background: var(--claude-input-bg);
+  border: 1px solid var(--claude-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+#aether-app[data-theme="claude"] .bottom-pills-row {
+  display: none;
+}
+
+#aether-app[data-theme="claude"] .message-turn.user .prompt-bubble {
+  background: #333230;
+  border-radius: 12px;
+  max-width: 75%;
+}
